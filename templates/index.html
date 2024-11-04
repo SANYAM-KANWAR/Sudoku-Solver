@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Sudoku Solver</title>
+</head>
+<body>
+    <h1>Sudoku Solver</h1>
+    <table>
+        <tbody id="sudoku-grid">
+            {% for i in range(9) %}
+                <tr>
+                    {% for j in range(9) %}
+                        <td>
+                            <input type="text" maxlength="1" class="cell" data-row="{{ i }}" data-col="{{ j }}">
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button id="solve-button">Solve</button>
+    <div id="result"></div>
+    <script>
+        document.getElementById("solve-button").onclick = function() {
+            let board = [];
+            for (let i = 0; i < 9; i++) {
+                let row = [];
+                for (let j = 0; j < 9; j++) {
+                    let cell = document.querySelector(`input[data-row="${i}"][data-col="${j}"]`).value;
+                    row.push(cell ? parseInt(cell) : 0);
+                }
+                board.push(row);
+            }
+
+            fetch('/solve', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ board: board })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data === "No solution exists.") {
+                    document.getElementById("result").innerText = data;
+                } else {
+                    data.forEach((row, i) => {
+                        row.forEach((num, j) => {
+                            document.querySelector(`input[data-row="${i}"][data-col="${j}"]`).value = num;
+                        });
+                    });
+                    document.getElementById("result").innerText = "Sudoku solved!";
+                }
+            });
+        };
+    </script>
+</body>
+</html>
